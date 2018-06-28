@@ -38,7 +38,7 @@ setup(
     zip_safe=True,
     license='MIT',
     classifiers=[
-        'Development Status :: 3 - Beta',
+        'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Natural Language :: English'
