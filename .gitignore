@@ -1,0 +1,6 @@
+*/__pycache__/
+*.egg-info/
+.idea/
+examples/
+maek.egg-info/
+venv/
