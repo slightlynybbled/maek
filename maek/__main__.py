@@ -11,7 +11,7 @@ from maek.version import __version__
 @click.option('--project', '-p', type=str, default='maek', required=True, help='path to the project file (yml)')
 @click.option('--name', '-n', type=str, default='build', required=True, help='the name to build from the project file')
 @click.option('--clean', '-c', is_flag=True, default=False, help='when specified, will clean the project')
-@click.option('--build', '-b', is_flag=True, default=True, help='when specified, build the project (default)')
+@click.option('--build', '-b', is_flag=True, default=False, help='when specified, build the project (default)')
 def main(project, name, clean, build):
     try:
         with open(project, 'r') as f:
