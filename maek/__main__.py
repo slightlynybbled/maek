@@ -14,7 +14,8 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(message)s')
 @click.option('--clean', '-c', is_flag=True, default=False)
 @click.option('--file', '-f', type=str, default='maekfile', help='specifies the maekfile')
 @click.option('--verbose', '-v', is_flag=True, default=False, help='turn on verbose mode')
-def main(configuration, clean, file, verbose):
+@click.option('--quiet', '-q', is_flag=True, default=False, help='quiet output, only displays warnings and errors')
+def main(configuration, clean, file, verbose, quiet):
     logger = logging.getLogger()
     if verbose:
         logger.setLevel(logging.DEBUG)
@@ -52,6 +53,8 @@ def main(configuration, clean, file, verbose):
                 new_project['link'] = False
 
             loglevel = logging.DEBUG if verbose else logging.INFO
+            loglevel = logging.WARNING if quiet else loglevel
+
             Builder(loglevel=loglevel, **new_project)
 
     if not config_found:

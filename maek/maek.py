@@ -62,7 +62,8 @@ class Builder:
             sources=compiler.output_files,
             scripts=lscripts,
             flags=flags + lflags,
-            out=f'{name}/{name}.{out}'
+            out=f'{name}/{name}.{out}',
+            loglevel=loglevel
         )
         if link:
             linker.link()
@@ -73,13 +74,15 @@ class Builder:
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
                 out_files=exports,
-                objcopy=objcopy
+                objcopy=objcopy,
+                loglevel=loglevel
             )
             copier.copy()
 
             sizer = Sizer(
                 in_file=os.path.basename(linker.out_file),
-                size=size
+                size=size,
+                loglevel=loglevel
             )
             sizer.size()
             os.chdir(path)
@@ -87,7 +90,7 @@ class Builder:
         if scripts and not clean:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
-                ExecScripts(post_compile_scripts, loglevel=logging.DEBUG)
+                ExecScripts(post_compile_scripts, loglevel=loglevel)
 
 
 class Compiler:
@@ -214,7 +217,7 @@ class Sizer:
     def size(self):
         if self._script:
             self._logger.info('sizing...')
-            ExecScripts([self._script], loglevel=logging.DEBUG)
+            ExecScripts([self._script], loglevel=self._logger.getEffectiveLevel())
 
 
 # todo: parallel builds
