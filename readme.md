@@ -8,6 +8,8 @@ All of this is likely to change as I begin to use the tool.  Don't count on cons
 
 # Usage
 
+All uses will assume that there is a file called `maekfile` within the directory being executed.  This file consists of a YML dictionary containing a default configuration along with other potential configurations which are variantes on the default.  You may specify a different `maekfile` on the command line using the `--file` or `-f` options.
+
 ## YML files
 
 The YML file is best presented as an example.  Below is an example that will compile an arm-based processor.
