@@ -27,14 +27,13 @@ class Builder:
         sources = sources if sources else []
         includes = includes if includes else []
         lscripts = lscripts if lscripts else []
-        if path:
-            out = out if out else f'{path}/{name}.out'
-        else:
-            out = out if out else f'{name}/{name}.out'
+        if not path:
+            path = name
+        out = f'{name}/{name}.{out}' if out else f'{path}/{name}.out'
+
         exports = [f'{name}.{e}' for e in exports] if exports else []
 
-        if path:
-            os.chdir(path)
+        os.makedirs(f'{path}', exist_ok=True)
 
         if scripts and not clean:
             pre_compile_scripts = scripts.get('pre')
@@ -44,9 +43,10 @@ class Builder:
         if clean:
             self._logger.info('cleaning...')
             try:
-                rmtree(f'{path}/{name}')
+                rmtree(f'{name}')
             except FileNotFoundError:
                 pass
+
             os.makedirs(f'{path}/{name}', exist_ok=True)
 
         compiler = Compiler(
@@ -75,10 +75,7 @@ class Builder:
 
         # copiers will operate exclusively within the build directory, but only after a successful link operation
         if compile or link:
-            if path:
-                os.chdir(f'{path}/{name}')
-            else:
-                os.chdir(f'{name}')
+            os.chdir(f'{path}')
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
                 out_files=exports,
@@ -93,10 +90,7 @@ class Builder:
                 loglevel=loglevel
             )
             sizer.size()
-            if path:
-                os.chdir(path)
-            else:
-                os.chdir('../')
+            os.chdir('../')
 
         if scripts and not clean:
             post_compile_scripts = scripts.get('post')
@@ -111,10 +105,7 @@ class Compiler:
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
-        self._name = name
-        self._compiler = compiler
-
-        build_path = f'{self._name}'
+        build_path = f'{name}'
 
         base_names = [f'{os.path.splitext(s)[0]}' for s in sources]
         source_files = []
@@ -141,7 +132,7 @@ class Compiler:
         flag_string = ' '.join(flags)
         include_string = ' '.join([f'-I"{i}"' for i in includes])
 
-        compile_scripts = [f'"{self._compiler}" -c {sf} -o {of} {flag_string} {include_string}' for sf, of in zip(source_files, to_compile)]
+        compile_scripts = [f'"{compiler}" -c {sf} -o {of} {flag_string} {include_string}' for sf, of in zip(source_files, to_compile)]
 
         self.output_files = object_files
         self._compile_scripts = compile_scripts
@@ -218,6 +209,9 @@ class Sizer:
 
         self._script = ''
 
+        print(os.getcwd())
+        print(in_file)
+
         if 'dec' in format.lower():
             self._script = f'{size} {in_file}'
         elif 'hex' in format.lower():
@@ -248,10 +242,10 @@ class ExecScripts:
             status = p.wait()
 
             if output:
-                self._logger.info(output.decode('utf-8'))
+                self._logger.info(f"\n{output.decode('utf-8')}")
 
             if error:
-                self._logger.warning(error.decode('utf-8'))
+                self._logger.warning(f"\n{error.decode('utf-8')}")
 
             if status != 0:
                 self._logger.error('failed')
