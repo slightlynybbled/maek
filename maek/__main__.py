@@ -5,39 +5,60 @@ import click
 from maek.maek import Builder
 from maek.version import __version__
 
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(message)s')
+
 
 @click.command()
 @click.version_option()
-@click.option('--project', '-p', type=str, default='maek', required=True, help='path to the project file (yml)')
-@click.option('--name', '-n', type=str, default='build', required=True, help='the name to build from the project file')
-@click.option('--clean', '-c', is_flag=True, default=False, help='when specified, will clean the project')
-@click.option('--build', '-b', is_flag=True, default=False, help='when specified, build the project (default)')
-def main(project, name, clean, build):
+@click.argument('configuration')
+@click.option('--clean', '-c', is_flag=True, default=False)
+@click.option('--file', '-f', type=str, default='maekfile', help='specifies the maekfile')
+@click.option('--verbose', '-v', is_flag=True, default=False, help='turn on verbose mode')
+def main(configuration, clean, file, verbose):
+    logger = logging.getLogger()
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+
     try:
-        with open(project, 'r') as f:
+        with open(file, 'r') as f:
             string = f.read()
             bd = yaml.load(string)
     except (FileNotFoundError, PermissionError):
-        print(f'maek version {__version__}')
+        logger.info(f'maek version {__version__}')
         return
 
-    project_found = False
+    # first, load the 'default' configuration
+    project = bd.get('default')
+    if project is None:
+        logger.error('default configuration not found, exiting')
+        return
+
+    config_found = False
+
     for project_name in bd.keys():
-        if project_name == name:
-            project_found = True
+        if project_name == configuration:
+            config_found = True
 
-            pd = {'name': project_name}
-            for k, v in bd[project_name].items():
-                pd[k] = v
+            new_project = bd['default'].copy()
+            new_project['name'] = configuration
 
-            Builder(compile=build, link=build, clean=clean, **pd)
+            # overwrite the defaults
+            for k, v in bd[configuration].items():
+                new_project[k] = v
 
-    if not project_found:
-        print(f'name "{name}" not found within {project}, exiting')
+            if clean:
+                new_project['clean'] = True
+                new_project['compile'] = False
+                new_project['link'] = False
+
+            loglevel = logging.DEBUG if verbose else logging.INFO
+            Builder(loglevel=loglevel, **new_project)
+
+    if not config_found:
+        logger.error(f'configuration {configuration} not found within {file}')
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
     main()
 
 

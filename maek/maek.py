@@ -13,11 +13,11 @@ class Builder:
                  sources: list=None, includes: list=None, lscripts: list=None,
                  out: str=None, exports: list=None, scripts: dict=None,
                  compile: bool=True, link: bool=True,
-                 clean: bool=False, force: bool=False):
+                 clean: bool=False, force: bool=False,
+                 loglevel=logging.INFO):
 
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._logger.setLevel(logging.DEBUG)
-
+        self._logger.setLevel(loglevel)
         self._logger.info('building...')
 
         os.chdir(path)
@@ -31,10 +31,10 @@ class Builder:
         out = out if out else f'{path}/{name}/{name}.{out}'
         exports = [f'{name}.{e}' for e in exports] if exports else []
 
-        if scripts:
+        if scripts and not clean:
             pre_compile_scripts = scripts.get('pre')
             if pre_compile_scripts:
-                ExecScripts(pre_compile_scripts)
+                ExecScripts(pre_compile_scripts, loglevel=logging.DEBUG)
 
         if clean:
             self._logger.info('cleaning...')
@@ -50,7 +50,8 @@ class Builder:
             sources=sources,
             includes=includes,
             flags=flags + cflags,
-            force=force
+            force=force,
+            loglevel=loglevel
         )
         if compile:
             compiler.compile()
@@ -66,33 +67,35 @@ class Builder:
         if link:
             linker.link()
 
-        # copyiers will operate exclusively within the build directory
-        os.chdir(f'{path}/{name}')
-        copier = Copier(
-            in_file=os.path.basename(linker.out_file),
-            out_files=exports,
-            objcopy=objcopy
-        )
-        copier.copy()
+        # copiers will operate exclusively within the build directory, but only after a successful link operation
+        if compile or link:
+            os.chdir(f'{path}/{name}')
+            copier = Copier(
+                in_file=os.path.basename(linker.out_file),
+                out_files=exports,
+                objcopy=objcopy
+            )
+            copier.copy()
 
-        sizer = Sizer(
-            in_file=os.path.basename(linker.out_file),
-            size=size
-        )
-        sizer.size()
-        os.chdir(path)
+            sizer = Sizer(
+                in_file=os.path.basename(linker.out_file),
+                size=size
+            )
+            sizer.size()
+            os.chdir(path)
 
-        if scripts:
+        if scripts and not clean:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
-                ExecScripts(post_compile_scripts)
+                ExecScripts(post_compile_scripts, loglevel=logging.DEBUG)
 
 
 class Compiler:
     def __init__(self, name: str, compiler='gcc',
-                 sources=None, includes=None, flags=None, force=False):
+                 sources=None, includes=None, flags=None, force=False,
+                 loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._logger.setLevel(logging.INFO)
+        self._logger.setLevel(loglevel)
 
         self._name = name
         self._compiler = compiler
@@ -102,6 +105,7 @@ class Compiler:
         base_names = [f'{os.path.splitext(s)[0]}' for s in sources]
         source_files = []
         object_files = []
+        to_compile = []
 
         # if the object file is older than the source, then re-compile
         for fname in base_names:
@@ -117,12 +121,13 @@ class Compiler:
 
             if s_mtime > o_mtime or force:
                 source_files.append(s)
-                object_files.append(o)
+                to_compile.append(o)
+            object_files.append(o)
 
         flag_string = ' '.join(flags)
         include_string = ' '.join([f'-I"{i}"' for i in includes])
 
-        compile_scripts = [f'"{self._compiler}" -c {sf} -o {of} {flag_string} {include_string}' for sf, of in zip(source_files, object_files)]
+        compile_scripts = [f'"{self._compiler}" -c {sf} -o {of} {flag_string} {include_string}' for sf, of in zip(source_files, to_compile)]
 
         self.output_files = object_files
         self._compile_scripts = compile_scripts
@@ -135,15 +140,16 @@ class Compiler:
             os.makedirs(d, exist_ok=True)
 
         # compile all of the .o files
-        ExecScripts(self._compile_scripts)
+        ExecScripts(self._compile_scripts, loglevel=self._logger.getEffectiveLevel())
 
 
 class Linker:
     def __init__(self, name: str, str=None, linker: str='gcc',
                  sources: list=None, scripts: list=None, flags=None,
-                 out: str=None):
+                 out: str=None,
+                 loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._logger.setLevel(logging.INFO)
+        self._logger.setLevel(loglevel)
 
         self._name = name
 
@@ -166,13 +172,13 @@ class Linker:
 
     def link(self):
         self._logger.info('linking...')
-        ExecScripts([self._link_script])
+        ExecScripts([self._link_script], loglevel=self._logger.getEffectiveLevel())
 
 
 class Copier:
-    def __init__(self, in_file, out_files: list, objcopy='objcopy'):
+    def __init__(self, in_file, out_files: list, objcopy='objcopy', loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._logger.setLevel(logging.INFO)
+        self._logger.setLevel(loglevel)
 
         self._scripts = []
 
@@ -188,13 +194,13 @@ class Copier:
 
     def copy(self):
         self._logger.info('copying...')
-        ExecScripts(self._scripts)
+        ExecScripts(self._scripts, loglevel=self._logger.getEffectiveLevel())
 
 
 class Sizer:
-    def __init__(self, in_file, format='dec', size='size'):
+    def __init__(self, in_file, format='dec', size='size', loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._logger.setLevel(logging.INFO)
+        self._logger.setLevel(loglevel)
 
         self._script = ''
 
@@ -217,8 +223,6 @@ class ExecScripts:
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
-        self.success = True
-
         if working_directory:
             os.chdir(working_directory)
 
@@ -230,10 +234,12 @@ class ExecScripts:
             status = p.wait()
 
             if output:
-                self._logger.debug(output.decode('utf-8'))
+                self._logger.info(output.decode('utf-8'))
 
             if error:
                 self._logger.warning(error.decode('utf-8'))
 
             if status != 0:
-                self._logger.error(f'failed')
+                self._logger.error('failed')
+            else:
+                self._logger.debug('success')
