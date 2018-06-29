@@ -1,0 +1,20 @@
+# This is the default case.  Nearly all settings from here
+# will be propagated to other configurations.
+default:
+  clean: false
+  compile: true
+  link: true
+
+  scripts:
+    pre: null
+    post: null
+
+  flags:
+    - -g
+
+  sources:
+    - gcc/src/main.c
+    - gcc/src/example.c
+
+  includes:
+    - gcc/inc
