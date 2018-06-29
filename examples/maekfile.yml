@@ -5,16 +5,20 @@ default:
   compile: true
   link: true
 
-  scripts:
-    pre: null
-    post: null
-
-  flags:
-    - -g
-
   sources:
     - gcc/src/main.c
     - gcc/src/example.c
 
   includes:
     - gcc/inc
+
+debug:
+  out: exe
+  flags:
+    - -O0
+    - -g
+
+release:
+  clean: true
+  flags:
+    - -O1
