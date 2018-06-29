@@ -7,8 +7,8 @@ import logging
 
 
 class Builder:
-    def __init__(self, name, path,
-                 toolchain_path, compiler, linker, objcopy, size,
+    def __init__(self, name, path=None,
+                 toolchain_path=None, compiler='gcc', linker='gcc', objcopy='objcopy', size='size',
                  flags: list=None, cflags: list=None, lflags: list=None,
                  sources: list=None, includes: list=None, lscripts: list=None,
                  out: str=None, exports: list=None, scripts: dict=None,
@@ -20,16 +20,21 @@ class Builder:
         self._logger.setLevel(loglevel)
         self._logger.info('building...')
 
-        os.chdir(path)
-
+        toolchain_path = toolchain_path if toolchain_path else ''
         flags = flags if flags else []
         cflags = cflags if cflags else []
         lflags = lflags if lflags else []
         sources = sources if sources else []
         includes = includes if includes else []
         lscripts = lscripts if lscripts else []
-        out = out if out else f'{path}/{name}/{name}.{out}'
+        if path:
+            out = out if out else f'{path}/{name}.out'
+        else:
+            out = out if out else f'{name}/{name}.out'
         exports = [f'{name}.{e}' for e in exports] if exports else []
+
+        if path:
+            os.chdir(path)
 
         if scripts and not clean:
             pre_compile_scripts = scripts.get('pre')
@@ -46,7 +51,7 @@ class Builder:
 
         compiler = Compiler(
             name,
-            compiler=f'{toolchain_path}/{compiler}',
+            compiler=f'{toolchain_path}/{compiler}' if toolchain_path else f'{compiler}',
             sources=sources,
             includes=includes,
             flags=flags + cflags,
@@ -58,11 +63,11 @@ class Builder:
 
         linker = Linker(
             name,
-            linker=f'{toolchain_path}/{linker}',
+            linker=f'{toolchain_path}/{linker}' if toolchain_path else f'{linker}',
             sources=compiler.output_files,
             scripts=lscripts,
             flags=flags + lflags,
-            out=f'{name}/{name}.{out}',
+            out=f'{out}',
             loglevel=loglevel
         )
         if link:
@@ -70,7 +75,10 @@ class Builder:
 
         # copiers will operate exclusively within the build directory, but only after a successful link operation
         if compile or link:
-            os.chdir(f'{path}/{name}')
+            if path:
+                os.chdir(f'{path}/{name}')
+            else:
+                os.chdir(f'{name}')
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
                 out_files=exports,
@@ -85,7 +93,10 @@ class Builder:
                 loglevel=loglevel
             )
             sizer.size()
-            os.chdir(path)
+            if path:
+                os.chdir(path)
+            else:
+                os.chdir('../')
 
         if scripts and not clean:
             post_compile_scripts = scripts.get('post')
@@ -147,7 +158,7 @@ class Compiler:
 
 
 class Linker:
-    def __init__(self, name: str, str=None, linker: str='gcc',
+    def __init__(self, name: str, linker: str='gcc',
                  sources: list=None, scripts: list=None, flags=None,
                  out: str=None,
                  loglevel=logging.INFO):
@@ -159,7 +170,7 @@ class Linker:
         sources = sources if sources else []
         scripts = scripts if scripts else []
         flags = flags if flags else []
-        out = out if out else f'{name}/{name}'
+        out = out if out else f'{name}.out'
 
         for s in scripts:
             _, extension = os.path.splitext(s)
