@@ -1,6 +1,7 @@
 import logging
 import yaml
 import click
+import os
 
 from maek.maek import Builder
 
@@ -11,7 +12,7 @@ logging.basicConfig(format='%(asctime)s: %(message)s')
 @click.version_option()
 @click.argument('configuration')
 @click.option('--clean', '-c', is_flag=True, default=False)
-@click.option('--file', '-f', type=str, default='maekfile', help='specifies the maekfile')
+@click.option('--file', '-f', type=str, default='maekfile.yml', help='specifies the maekfile')
 @click.option('--verbose', '-v', is_flag=True, default=False, help='turn on verbose mode')
 @click.option('--quiet', '-q', is_flag=True, default=False, help='quiet output, only displays warnings and errors')
 @click.version_option()
@@ -19,6 +20,9 @@ def main(configuration, clean, file, verbose, quiet):
     logger = logging.getLogger()
     if verbose:
         logger.setLevel(logging.DEBUG)
+
+    if os.path.splitext(file)[1] == '':
+        file += '.yml'
 
     try:
         with open(file, 'r') as f:
