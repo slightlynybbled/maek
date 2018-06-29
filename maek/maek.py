@@ -34,7 +34,7 @@ class Builder:
         if scripts and not clean:
             pre_compile_scripts = scripts.get('pre')
             if pre_compile_scripts:
-                ExecScripts(pre_compile_scripts, loglevel=logging.DEBUG)
+                ExecScripts(pre_compile_scripts, loglevel=loglevel+10)
 
         if clean:
             self._logger.info('cleaning...')
@@ -90,7 +90,7 @@ class Builder:
         if scripts and not clean:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
-                ExecScripts(post_compile_scripts, loglevel=loglevel)
+                ExecScripts(post_compile_scripts, loglevel=loglevel+10)
 
 
 class Compiler:
