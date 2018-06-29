@@ -15,6 +15,7 @@ logging.basicConfig(format='%(asctime)s: %(message)s')
 @click.option('--file', '-f', type=str, default='maekfile', help='specifies the maekfile')
 @click.option('--verbose', '-v', is_flag=True, default=False, help='turn on verbose mode')
 @click.option('--quiet', '-q', is_flag=True, default=False, help='quiet output, only displays warnings and errors')
+@click.version_option()
 def main(configuration, clean, file, verbose, quiet):
     logger = logging.getLogger()
     if verbose:
@@ -25,7 +26,7 @@ def main(configuration, clean, file, verbose, quiet):
             string = f.read()
             bd = yaml.load(string)
     except (FileNotFoundError, PermissionError):
-        logger.info(f'maek version {__version__}')
+        logger.error(f'cannot find configuration file {file}')
         return
 
     # first, load the 'default' configuration
