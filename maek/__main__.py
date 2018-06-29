@@ -62,7 +62,7 @@ def main(configuration, clean, file, verbose, quiet):
             Builder(loglevel=loglevel, **new_project)
 
     if not config_found:
-        logger.error(f'configuration {configuration} not found within {file}')
+        logger.error(f'configuration "{configuration}" not found within "{file}"')
 
 
 if __name__ == '__main__':

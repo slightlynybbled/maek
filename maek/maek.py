@@ -28,16 +28,23 @@ class Builder:
         includes = includes if includes else []
         lscripts = lscripts if lscripts else []
         if not path:
-            path = name
-        out = f'{name}/{name}.{out}' if out else f'{path}/{name}.out'
+            path = os.getcwd()
+        else:
+            os.chdir(f'{path}')
+
+        out = f'{path}/{name}/{name}.{out}' if out else f'{path}/{name}/{name}.out'
+        self._logger.debug(f'out file path: {out}')
 
         exports = [f'{name}.{e}' for e in exports] if exports else []
+        if exports:
+            self._logger.debug(f'exports: {exports}')
 
         os.makedirs(f'{path}', exist_ok=True)
 
         if scripts and not clean:
             pre_compile_scripts = scripts.get('pre')
             if pre_compile_scripts:
+                self._logger.info('executing pre-build scripts...')
                 ExecScripts(pre_compile_scripts, loglevel=loglevel+10)
 
         if clean:
@@ -47,7 +54,10 @@ class Builder:
             except FileNotFoundError:
                 pass
 
-            os.makedirs(f'{path}/{name}', exist_ok=True)
+            if not compile or not link:
+                return
+
+        os.makedirs(f'{path}/{name}', exist_ok=True)
 
         compiler = Compiler(
             name,
@@ -61,8 +71,10 @@ class Builder:
         if compile:
             compiler.compile()
 
+        print('out file', out)
         linker = Linker(
             name,
+            path=path,
             linker=f'{toolchain_path}/{linker}' if toolchain_path else f'{linker}',
             sources=compiler.output_files,
             scripts=lscripts,
@@ -75,9 +87,9 @@ class Builder:
 
         # copiers will operate exclusively within the build directory, but only after a successful link operation
         if compile or link:
-            os.chdir(f'{path}')
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
+                path=f'{path}/{name}',
                 out_files=exports,
                 objcopy=objcopy,
                 loglevel=loglevel
@@ -86,11 +98,11 @@ class Builder:
 
             sizer = Sizer(
                 in_file=os.path.basename(linker.out_file),
+                path=f'{path}/{name}',
                 size=size,
                 loglevel=loglevel
             )
             sizer.size()
-            os.chdir('../')
 
         if scripts and not clean:
             post_compile_scripts = scripts.get('post')
@@ -149,7 +161,7 @@ class Compiler:
 
 
 class Linker:
-    def __init__(self, name: str, linker: str='gcc',
+    def __init__(self, name: str, path: str, linker: str='gcc',
                  sources: list=None, scripts: list=None, flags=None,
                  out: str=None,
                  loglevel=logging.INFO):
@@ -161,7 +173,7 @@ class Linker:
         sources = sources if sources else []
         scripts = scripts if scripts else []
         flags = flags if flags else []
-        out = out if out else f'{name}.out'
+        out = out if out else f'{path}/{name}.out'
 
         for s in scripts:
             _, extension = os.path.splitext(s)
@@ -181,7 +193,7 @@ class Linker:
 
 
 class Copier:
-    def __init__(self, in_file, out_files: list, objcopy='objcopy', loglevel=logging.INFO):
+    def __init__(self, in_file, path, out_files: list, objcopy='objcopy', loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
@@ -190,32 +202,30 @@ class Copier:
         for out_file in out_files:
             if 'hex' in out_file.lower():
                 self._scripts.append(
-                    f'{objcopy} -O ihex {in_file} {out_file}'
+                    f'{objcopy} -O ihex {path}/{in_file} {path}/{out_file}'
                 )
             elif 'bin' in out_file.lower():
                 self._scripts.append(
-                    f'{objcopy} -O binary {in_file} {out_file}'
+                    f'{objcopy} -O binary {path}/{in_file} {path}/{out_file}'
                 )
 
     def copy(self):
-        self._logger.info('copying...')
-        ExecScripts(self._scripts, loglevel=self._logger.getEffectiveLevel())
+        if self._scripts:
+            self._logger.info('copying...')
+            ExecScripts(self._scripts, loglevel=logging.DEBUG)
 
 
 class Sizer:
-    def __init__(self, in_file, format='dec', size='size', loglevel=logging.INFO):
+    def __init__(self, in_file, path, format='dec', size='size', loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
         self._script = ''
 
-        print(os.getcwd())
-        print(in_file)
-
         if 'dec' in format.lower():
-            self._script = f'{size} {in_file}'
+            self._script = f'{size} {path}/{in_file}'
         elif 'hex' in format.lower():
-            self._script = f'{size} -x {in_file}'
+            self._script = f'{size} -x {path}/{in_file}'
         else:
             self._script = None
 
