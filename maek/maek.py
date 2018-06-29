@@ -71,7 +71,6 @@ class Builder:
         if compile:
             compiler.compile()
 
-        print('out file', out)
         linker = Linker(
             name,
             path=path,
@@ -152,9 +151,16 @@ class Compiler:
     def compile(self):
         self._logger.info('compiling...')
         # build the project directory as GCC will not create subdirectories for you
+
+        self._logger.debug('creating output directories...')
         for o in self.output_files:
             d = os.path.dirname(o)
-            os.makedirs(d, exist_ok=True)
+
+            try:
+                os.makedirs(d)
+                self._logger.debug(f'creating {d}')
+            except FileExistsError:
+                os.makedirs(d, exist_ok=True)
 
         # compile all of the .o files
         ExecScripts(self._compile_scripts, loglevel=self._logger.getEffectiveLevel())
@@ -252,7 +258,7 @@ class ExecScripts:
             status = p.wait()
 
             if output:
-                self._logger.info(f"\n{output.decode('utf-8')}")
+                self._logger.info(f"{output.decode('utf-8')}")
 
             if error:
                 self._logger.warning(f"\n{error.decode('utf-8')}")
