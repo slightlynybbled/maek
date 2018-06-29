@@ -3,7 +3,6 @@ import yaml
 import click
 
 from maek.maek import Builder
-from maek.version import __version__
 
 logging.basicConfig(format='%(asctime)s: %(message)s')
 
