@@ -5,7 +5,7 @@ import click
 from maek.maek import Builder
 from maek.version import __version__
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(message)s')
+logging.basicConfig(format='%(asctime)s: %(message)s')
 
 
 @click.command()
