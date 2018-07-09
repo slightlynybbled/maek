@@ -29,8 +29,11 @@ def main(configuration, clean, file, verbose, quiet):
         with open(file, 'r') as f:
             string = f.read()
             bd = yaml.load(string)
-    except (FileNotFoundError, PermissionError):
+    except FileNotFoundError:
         logger.error(f'cannot find configuration file {file}')
+        return
+    except PermissionError:
+        logger.error(f'user does not have permission to access {file}')
         return
 
     # first, load the 'default' configuration

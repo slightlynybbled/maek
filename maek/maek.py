@@ -22,6 +22,7 @@ class Builder:
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
         self._logger.info('beginning...')
+        succeeded = True
 
         toolchain_path = toolchain_path if toolchain_path else ''
         flags = flags if flags else []
@@ -49,20 +50,22 @@ class Builder:
             pre_compile_scripts = scripts.get('pre')
             if pre_compile_scripts:
                 self._logger.info('executing pre-build scripts...')
-                ExecScripts(pre_compile_scripts, loglevel=loglevel+10)
+                es = ExecScripts(pre_compile_scripts, loglevel=loglevel+10)
+                succeeded = False if es.succeeded is False else succeeded
 
         if clean:
             self._logger.info('cleaning...')
             try:
                 rmtree(f'{name}')
             except FileNotFoundError:
-                pass
-
-            if not compile or not link:
-                return
+                self._logger.error('directory not found')
+                succeeded = False
 
         if compile or link:
-            os.makedirs(f'{path}/{name}', exist_ok=True)
+            try:
+                os.makedirs(f'{path}/{name}', exist_ok=True)
+            except PermissionError:
+                succeeded = False
 
         compiler = Compiler(
             name,
@@ -74,8 +77,9 @@ class Builder:
             loglevel=loglevel
         )
 
-        if compile:
+        if compile and succeeded is not False:
             compiler.compile()
+            succeeded = False if compiler.succeeded is False else succeeded
 
         linker = Linker(
             name,
@@ -87,11 +91,12 @@ class Builder:
             out=f'{out}',
             loglevel=loglevel
         )
-        if link:
+        if link and succeeded is not False:
             linker.link()
+            succeeded = False if linker.succeeded is False else succeeded
 
         # copiers will operate exclusively within the build directory, but only after a successful link operation
-        if compile or link:
+        if compile or link and succeeded is not False:
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
                 path=f'{path}/{name}',
@@ -100,7 +105,9 @@ class Builder:
                 loglevel=loglevel
             )
             copier.copy()
+            succeeded = False if copier.succeeded is False else succeeded
 
+        if (compile or link) and succeeded is not False:
             sizer = Sizer(
                 in_file=os.path.basename(linker.out_file),
                 path=f'{path}/{name}',
@@ -108,12 +115,19 @@ class Builder:
                 loglevel=loglevel
             )
             sizer.size()
+            succeeded = False if sizer.succeeded is False else succeeded
 
-        if scripts and not clean:
+        if scripts and not clean and succeeded is not False:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
                 self._logger.info('executing post-build scripts...')
-                ExecScripts(post_compile_scripts, loglevel=loglevel+10)
+                es = ExecScripts(post_compile_scripts, loglevel=loglevel+10)
+                succeeded = False if es.succeeded is False else succeeded
+
+        if succeeded:
+            self._logger.info('complete!')
+        else:
+            self._logger.error('one or more processes failed, build process halted prematurely')
 
 
 class Compiler:
@@ -125,6 +139,8 @@ class Compiler:
                  loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
+
+        self.succeeded = None
 
         build_path = f'{name}'
 
@@ -177,7 +193,9 @@ class Compiler:
                 os.makedirs(d, exist_ok=True)
 
         # compile all of the .o files
-        ExecScripts(self._compile_scripts, loglevel=self._logger.getEffectiveLevel())
+        es = ExecScripts(self._compile_scripts, loglevel=self._logger.getEffectiveLevel())
+        self.succeeded = es.succeeded
+        return es.succeeded
 
 
 class Linker:
@@ -192,6 +210,7 @@ class Linker:
         self._logger.setLevel(loglevel)
 
         self._name = name
+        self.succeeded = None
 
         sources = sources if sources else []
         scripts = scripts if scripts else []
@@ -216,7 +235,9 @@ class Linker:
         :return: None
         """
         self._logger.info('linking...')
-        ExecScripts([self._link_script], loglevel=self._logger.getEffectiveLevel())
+        es = ExecScripts([self._link_script], loglevel=self._logger.getEffectiveLevel())
+        self.succeeded = es.succeeded
+        return es.succeeded
 
 
 class Copier:
@@ -228,6 +249,7 @@ class Copier:
         self._logger.setLevel(loglevel)
 
         self._scripts = []
+        self.succeeded = None
 
         for out_file in out_files:
             if 'hex' in out_file.lower():
@@ -246,7 +268,11 @@ class Copier:
         """
         if self._scripts:
             self._logger.info('copying...')
-            ExecScripts(self._scripts, loglevel=logging.DEBUG)
+            es = ExecScripts(self._scripts, loglevel=logging.DEBUG)
+            self.succeeded = es.succeeded
+            return es.succeeded
+
+        return None
 
 
 class Sizer:
@@ -258,6 +284,7 @@ class Sizer:
         self._logger.setLevel(loglevel)
 
         self._script = ''
+        self.succeeded = None
 
         if 'dec' in format.lower():
             self._script = f'{size} {path}/{in_file}'
@@ -269,7 +296,11 @@ class Sizer:
     def size(self):
         if self._script:
             self._logger.info('sizing...')
-            ExecScripts([self._script], loglevel=self._logger.getEffectiveLevel())
+            es = ExecScripts([self._script], loglevel=self._logger.getEffectiveLevel())
+            self.succeeded = es.succeeded
+            return es.succeeded
+
+        return None
 
 
 # todo: parallel builds
@@ -281,6 +312,8 @@ class ExecScripts:
     def __init__(self, scripts: list, working_directory=None, loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
+
+        self.succeeded = True  # indicates that all scripts executed successfully
 
         if working_directory:
             os.chdir(working_directory)
@@ -300,5 +333,7 @@ class ExecScripts:
 
             if status != 0:
                 self._logger.error('failed')
+                self.succeeded = False
+                break
             else:
                 self._logger.debug('success')
