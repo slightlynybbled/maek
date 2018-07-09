@@ -12,7 +12,6 @@ def dict_replace(data: dict, current_value: str, new_value: str):
         if isinstance(v, dict):
             new_data[k] = dict_replace(v, current_value, new_value)
         elif isinstance(v, list):
-            print(k, v)
             new_list = list()
             for value in v:
                 new_list.append(value.replace(current_value, new_value))
