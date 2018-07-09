@@ -22,3 +22,12 @@ release:
   clean: true
   flags:
     - -O1
+
+run:
+  clean: false
+  compile: false
+  link: false
+
+  scripts:
+    post:
+      - '"release/release.out"'
