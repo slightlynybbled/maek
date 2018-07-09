@@ -145,13 +145,15 @@ class Compiler:
         build_path = f'{name}'
 
         base_names = [f'{os.path.splitext(s)[0]}' for s in sources]
+        extensions = [f'{os.path.splitext(s)[1]}' for s in sources]
+
         source_files = []
         object_files = []
         to_compile = []
 
         # if the object file is older than the source, then re-compile
-        for fname in base_names:
-            s = f'{fname}.c'
+        for fname, extension in zip(base_names, extensions):
+            s = f'{fname}{extension}'
             o = f'{build_path}/{fname}.o'
 
             s_mtime = os.stat(s).st_mtime
