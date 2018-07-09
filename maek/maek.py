@@ -7,6 +7,9 @@ import logging
 
 
 class Builder:
+    """
+    This is the core class which will compile, link, and execute all pre/post scripts.
+    """
     def __init__(self, name, path=None,
                  toolchain_path=None, compiler='gcc', linker='gcc', objcopy='objcopy', size='size',
                  flags: list=None, cflags: list=None, lflags: list=None,
@@ -110,6 +113,9 @@ class Builder:
 
 
 class Compiler:
+    """
+    Responsible for compiling usince gcc-based syntax.
+    """
     def __init__(self, name: str, compiler='gcc',
                  sources=None, includes=None, flags=None, force=False,
                  loglevel=logging.INFO):
@@ -149,6 +155,10 @@ class Compiler:
         self._compile_scripts = compile_scripts
 
     def compile(self):
+        """
+        The compiler
+        :return: None
+        """
         self._logger.info('compiling...')
         # build the project directory as GCC will not create subdirectories for you
 
@@ -167,6 +177,9 @@ class Compiler:
 
 
 class Linker:
+    """
+    Executes the linker using gcc-based syntax.
+    """
     def __init__(self, name: str, path: str, linker: str='gcc',
                  sources: list=None, scripts: list=None, flags=None,
                  out: str=None,
@@ -194,11 +207,18 @@ class Linker:
         self.out_file = out
 
     def link(self):
+        """
+        Executes the linking process
+        :return: None
+        """
         self._logger.info('linking...')
         ExecScripts([self._link_script], loglevel=self._logger.getEffectiveLevel())
 
 
 class Copier:
+    """
+    Copies the files into different formats using gcc-based syntax (see gcc `objcopy`).
+    """
     def __init__(self, in_file, path, out_files: list, objcopy='objcopy', loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
@@ -216,12 +236,19 @@ class Copier:
                 )
 
     def copy(self):
+        """
+        Executes the copy operation.
+        :return:
+        """
         if self._scripts:
             self._logger.info('copying...')
             ExecScripts(self._scripts, loglevel=logging.DEBUG)
 
 
 class Sizer:
+    """
+    Shows the size using gcc-based syntax (see gcc `size`).
+    """
     def __init__(self, in_file, path, format='dec', size='size', loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
@@ -243,6 +270,10 @@ class Sizer:
 
 # todo: parallel builds
 class ExecScripts:
+    """
+    Executes a list of scripts while printing any output and status to the console.
+    """
+
     def __init__(self, scripts: list, working_directory=None, loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
