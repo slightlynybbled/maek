@@ -77,7 +77,7 @@ class Builder:
             loglevel=loglevel
         )
 
-        if compile and succeeded is not False:
+        if compile and succeeded:
             compiler.compile()
             succeeded = False if compiler.succeeded is False else succeeded
 
@@ -91,12 +91,12 @@ class Builder:
             out=f'{out}',
             loglevel=loglevel
         )
-        if link and succeeded is not False:
+        if link and succeeded:
             linker.link()
             succeeded = False if linker.succeeded is False else succeeded
 
         # copiers will operate exclusively within the build directory, but only after a successful link operation
-        if compile or link and succeeded is not False:
+        if compile or link and succeeded:
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
                 path=f'{path}/{name}',
@@ -107,7 +107,7 @@ class Builder:
             copier.copy()
             succeeded = False if copier.succeeded is False else succeeded
 
-        if (compile or link) and succeeded is not False:
+        if (compile or link) and succeeded:
             sizer = Sizer(
                 in_file=os.path.basename(linker.out_file),
                 path=f'{path}/{name}',
@@ -117,7 +117,7 @@ class Builder:
             sizer.size()
             succeeded = False if sizer.succeeded is False else succeeded
 
-        if scripts and not clean and succeeded is not False:
+        if scripts and not clean and succeeded:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
                 self._logger.info('executing post-build scripts...')
