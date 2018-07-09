@@ -1,6 +1,7 @@
 import os
 from shutil import rmtree
 import subprocess
+from time import clock, sleep
 
 from tqdm import tqdm
 import logging
@@ -23,6 +24,7 @@ class Builder:
         self._logger.setLevel(loglevel)
         self._logger.info('beginning...')
         succeeded = True
+        start = clock()
 
         toolchain_path = toolchain_path if toolchain_path else ''
         flags = flags if flags else []
@@ -50,7 +52,7 @@ class Builder:
             pre_compile_scripts = scripts.get('pre')
             if pre_compile_scripts:
                 self._logger.info('executing pre-build scripts...')
-                es = ExecScripts(pre_compile_scripts, loglevel=loglevel+10)
+                es = ExecScripts(pre_compile_scripts, max_processes=1, loglevel=loglevel+10)
                 succeeded = False if es.succeeded is False else succeeded
 
         if clean:
@@ -121,13 +123,15 @@ class Builder:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
                 self._logger.info('executing post-build scripts...')
-                es = ExecScripts(post_compile_scripts, loglevel=loglevel+10)
+                es = ExecScripts(post_compile_scripts, max_processes=1, loglevel=loglevel+10)
                 succeeded = False if es.succeeded is False else succeeded
 
         if succeeded:
             self._logger.info('complete!')
         else:
             self._logger.error('one or more processes failed, build process halted prematurely')
+
+        self._logger.info(f'time to completion: {clock() - start:.03}s')
 
 
 class Compiler:
@@ -305,13 +309,12 @@ class Sizer:
         return None
 
 
-# todo: parallel builds
 class ExecScripts:
     """
     Executes a list of scripts while printing any output and status to the console.
     """
 
-    def __init__(self, scripts: list, working_directory=None, loglevel=logging.INFO):
+    def __init__(self, scripts: list, working_directory=None, max_processes=8, loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
@@ -320,10 +323,38 @@ class ExecScripts:
         if working_directory:
             os.chdir(working_directory)
 
-        for script in tqdm(scripts):
+        # collect and start all processes at one time to enable parallel builds
+        pbar = tqdm(total=len(scripts))
+        processes = []
+        for script in scripts:
             self._logger.debug(f'{script}')
 
             p = subprocess.Popen(script, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            processes.append(p)
+            self._logger.debug(f'creating process: {p}')
+            pbar.update(1)
+
+            # initial count of the active processes
+            active_processes = 0
+            for process in processes:
+                if process.poll() is None:
+                    active_processes += 1
+
+            while active_processes >= max_processes:
+                active_processes = 0
+                for process in processes:
+                    if process.poll() is None:
+                        active_processes += 1
+
+                self._logger.debug(f'waiting for active processes to go to below {max_processes}')
+                sleep(0.010)
+
+            # todo: if any processes have errored out, then stop all processes
+
+        # todo: wait for processes to complete
+
+        # wait for each process and appropriately show its output
+        for p in processes:
             output, error = p.communicate()
             status = p.wait()
 
@@ -338,4 +369,4 @@ class ExecScripts:
                 self.succeeded = False
                 break
             else:
-                self._logger.debug('success')
+                self._logger.debug(f'success: {p.args}')
