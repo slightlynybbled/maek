@@ -22,10 +22,3 @@ def dict_replace(data: dict, current_value: str, new_value: str):
             new_data[k] = v
 
     return new_data
-
-
-if __name__ == '__main__':
-    current_dict = {'one': 'one', 'two': 'two', 'three': ['one', 'two', 'three'], 'four': {'one': 'one'}}
-
-    print(current_dict, dict_replace(current_dict, 'one', '1'))
-
