@@ -68,3 +68,106 @@ The `maek` command generally expects to find a `maekfile` in the current directo
 
     $> maek release --clean
     
+# Configuration Options
+
+Every `maekfile` file must contain a `default` configuration.  Each configuration is a level 1 within the YAML-based `maekfile`.  Each configuration may contain the following options:
+
+## clean
+
+Boolean `true` or `false`.  Will trigger a clean as part of every execution of this configuration.  Default: `false`.
+
+## compile
+
+Boolean.  Will trigger a compile as part of every execution of this configuration.  Default: `true`.
+
+## link
+
+Boolean.  Will trigger a link as part of every execution of this configuration.  Default: `true`.
+
+## out
+
+List of strings.  Specifies the extension of the output.  Default: `out`.  Other desired extensions might be `exe` or `elf`.
+
+```yml
+default:
+  out:
+    - hex
+    - bin
+```
+
+## exports
+
+List of strings.  Will trigger a copy operation of the output file into different formats.  Valid strings are `hex` and `bin`.
+
+## scripts
+
+List of `pre` and `post` scripts, which are themselves lists of strings.  These commands will be executed verbatim before and/or after the build operation.  Defaults to `null`.
+
+```yml
+default:
+  scripts:
+    pre:
+      - rm -rf /path/to/somefile
+    post:
+      - /path/to/custom/script --script_param
+```
+
+## toolchain_path
+
+String.  Specifies the path to the directory containg the toolchain.  Defaults to `null`.
+
+## compiler
+
+String.  Defaults to `gcc`.
+
+## linker
+
+String.  Defaults to `gcc`.
+
+## objcopy
+
+String.  Defaults to `objcopy`.
+
+## size
+
+String.  Defaults to `size`.
+
+## flags
+
+A list of strings, each containing flags that will be forwarded to, both, the `compiler` and the `linker`.
+
+```yml
+default:
+  flags:
+    - -O1
+    - -fdata-sections
+    - -ffunction-sections
+```
+
+## cflags
+
+A list of strings, each containing flags that will be forwarded to the compiler only.  Very similar to `flags` above.
+
+## lflags
+
+A list of strings, each containing flags that will be forwarded to the linker only.  Very similar to `flags` above.
+
+## sources
+
+A list of strings, each of which is a source.  This is usually a list of your c files.
+
+```yml
+default:
+  sources:
+    - src/main.c
+    - src/included_source.c
+```
+
+## includes
+
+A list of strings, similar in format to `sources`, each element of which is an include file that will be passed to, both, the compiler and linker.
+
+## lscripts
+
+A list of strings, similar in format to `sources`, each element of which will be passed as a linker script into the linker.
+
