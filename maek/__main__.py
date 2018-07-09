@@ -10,7 +10,7 @@ logging.basicConfig(format='%(asctime)s: %(message)s')
 
 @click.command()
 @click.version_option()
-@click.argument('configuration')
+@click.argument('configuration', default='default')
 @click.option('--clean', '-c', is_flag=True, default=False)
 @click.option('--file', '-f', type=str, default='maekfile.yml', help='specifies the maekfile')
 @click.option('--verbose', '-v', is_flag=True, default=False, help='turn on verbose mode')
