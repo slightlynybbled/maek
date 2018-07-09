@@ -42,7 +42,8 @@ class Builder:
         if exports:
             self._logger.debug(f'exports: {exports}')
 
-        os.makedirs(f'{path}', exist_ok=True)
+        if compile or link:
+            os.makedirs(f'{path}', exist_ok=True)
 
         if scripts and not clean:
             pre_compile_scripts = scripts.get('pre')
@@ -60,7 +61,8 @@ class Builder:
             if not compile or not link:
                 return
 
-        os.makedirs(f'{path}/{name}', exist_ok=True)
+        if compile or link:
+            os.makedirs(f'{path}/{name}', exist_ok=True)
 
         compiler = Compiler(
             name,
