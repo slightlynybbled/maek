@@ -1,6 +1,6 @@
 # Sample `maekfile`
 
-In the maekfile, there are three configurations defined: `default`, `debug`, and `release`.  The `debug` and `release` configurations inherit all attributes from the `default` configuration except where they overwrite the default.
+In the maekfile, there are four configurations defined: `default`, `debug`, `release`, and `run`.  The `debug`, `release`, and `run` configurations inherit all attributes from the `default` configuration except where they overwrite the default.
 
 All executions assume that the user has navigated to a directory containing a valid `maekfile`.
 
@@ -15,7 +15,7 @@ Building other configurations involves specifying the desired configuration on t
 A sample `maek debug`:
 
     $> maek debug
-    2018-06-29 15:30:52,869: building...
+    2018-06-29 15:30:52,869: beginning...
     2018-06-29 15:30:52,870: compiling...
     100%|████████████████████| 2/2 [00:00<00:00, 18.75it/s]
     out file E:\maek\examples/debug/debug.exe
@@ -28,3 +28,14 @@ A sample `maek debug`:
       10080    2388    2448   14916    3a44 E:\maek\examples/debug/debug.exe
     
     100%|████████████████████| 1/1 [00:00<00:00,  5.58it/s]
+
+# Running the application
+
+A `run` configuration was added just to make running the output file easier and to demonstrate the flexibility of `maek`.
+
+    $> maek run
+    2018-07-09 11:18:18,864: beginning...
+    2018-07-09 11:18:18,864: executing post-build scripts...
+    100%|████████████████████| 1/1 [00:00<00:00, 91.64it/s]
+
+Note that the program output is not being displayed here.  Only errors and warnings from the program will be displayed unless one of the `--verbose` or `-v` options are specified.
