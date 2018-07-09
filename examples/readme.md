@@ -1,8 +1,18 @@
 # Sample `maekfile`
 
-In the maekfile, there are various configurations defined, all of which inherit from the `default`.
+In the maekfile, there are three configurations defined: `default`, `debug`, and `release`.  The `debug` and `release` configurations inherit all attributes from the `default` configuration except where they overwrite the default.
 
-To build these configurations:
+All executions assume that the user has navigated to a directory containing a valid `maekfile`.
+
+# Building the `default` configuration
+
+To build the default configuration, simply execute `maek` or `maek default` on the command line.
+
+# Building other configurations
+
+Building other configurations involves specifying the desired configuration on the command line.  For instance, to build the `debug` configuration, simply execute `maek debug`.
+
+A sample `maek debug`:
 
     $> maek debug
     2018-06-29 15:30:52,869: building...
