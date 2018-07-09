@@ -21,7 +21,7 @@ class Builder:
 
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
-        self._logger.info('building...')
+        self._logger.info('beginning...')
 
         toolchain_path = toolchain_path if toolchain_path else ''
         flags = flags if flags else []
@@ -71,6 +71,7 @@ class Builder:
             force=force,
             loglevel=loglevel
         )
+
         if compile:
             compiler.compile()
 
@@ -109,6 +110,7 @@ class Builder:
         if scripts and not clean:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
+                self._logger.info('executing post-build scripts...')
                 ExecScripts(post_compile_scripts, loglevel=loglevel+10)
 
 
