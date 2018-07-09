@@ -22,6 +22,7 @@ def main(configuration, clean, file, verbose, quiet):
     if verbose:
         logger.setLevel(logging.DEBUG)
 
+    # if there is no extension, then append 'yml' to it
     if os.path.splitext(file)[1] == '':
         file += '.yml'
 
@@ -53,7 +54,13 @@ def main(configuration, clean, file, verbose, quiet):
 
             # overwrite the defaults
             for k, v in bd[configuration].items():
-                new_project[k] = v
+                if isinstance(v, dict):
+                    if 'add' in v.keys():
+                        new_project[k] += v['add']
+                    else:
+                        new_project[k] = v
+                else:
+                    new_project[k] = v
 
             # replace certain strings
             new_project = dict_replace(new_project, '{{ BUILD_PATH }}', new_project['name'])

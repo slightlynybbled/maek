@@ -12,17 +12,22 @@ default:
   includes:
     - gcc/inc
 
-debug:
-  out: exe
   flags:
     - -O0
-    - -g
 
+# use the debug configuration to add the `-g` flag
+debug:
+  flags:
+    add:
+      - -g
+
+# the release configuration will automatically clean and build the entire project
 release:
   clean: true
   flags:
     - -O1
 
+# runs the released version without changing any files or directories
 run:
   clean: false
   compile: false
