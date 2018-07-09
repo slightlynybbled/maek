@@ -4,6 +4,7 @@ import click
 import os
 
 from maek.maek import Builder
+from maek.util import dict_replace
 
 logging.basicConfig(format='%(asctime)s: %(message)s')
 
@@ -50,6 +51,9 @@ def main(configuration, clean, file, verbose, quiet):
             # overwrite the defaults
             for k, v in bd[configuration].items():
                 new_project[k] = v
+
+            # replace certain strings
+            new_project = dict_replace(new_project, '{{ BUILD_PATH }}', new_project['name'])
 
             if clean:
                 new_project['clean'] = True

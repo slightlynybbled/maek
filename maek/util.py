@@ -1,0 +1,31 @@
+def dict_replace(data: dict, current_value: str, new_value: str):
+    """
+    Replace {{ PROJECT_PATH }} with the path
+    :param data:
+    :param current_value:
+    :param new_value:
+    :return:
+    """
+    new_data = dict()
+
+    for k, v in data.items():
+        if isinstance(v, dict):
+            new_data[k] = dict_replace(v, current_value, new_value)
+        elif isinstance(v, list):
+            print(k, v)
+            new_list = list()
+            for value in v:
+                new_list.append(value.replace(current_value, new_value))
+            new_data[k] = new_list
+
+        elif isinstance(v, str):
+            new_data[k] = v.replace(current_value, new_value)
+
+    return new_data
+
+
+if __name__ == '__main__':
+    current_dict = {'one': 'one', 'two': 'two', 'three': ['one', 'two', 'three'], 'four': {'one': 'one'}}
+
+    print(current_dict, dict_replace(current_dict, 'one', '1'))
+

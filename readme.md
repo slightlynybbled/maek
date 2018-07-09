@@ -72,19 +72,21 @@ The `maek` command generally expects to find a `maekfile` in the current directo
 
 Every `maekfile` file must contain a `default` configuration.  Each configuration is a level 1 within the YAML-based `maekfile`.  Each configuration may contain the following options:
 
-## clean
+## Configuration Options
+
+### clean
 
 Boolean `true` or `false`.  Will trigger a clean as part of every execution of this configuration.  Default: `false`.
 
-## compile
+### compile
 
 Boolean.  Will trigger a compile as part of every execution of this configuration.  Default: `true`.
 
-## link
+### link
 
 Boolean.  Will trigger a link as part of every execution of this configuration.  Default: `true`.
 
-## out
+### out
 
 List of strings.  Specifies the extension of the output.  Default: `out`.  Other desired extensions might be `exe` or `elf`.
 
@@ -95,11 +97,11 @@ default:
     - bin
 ```
 
-## exports
+### exports
 
 List of strings.  Will trigger a copy operation of the output file into different formats.  Valid strings are `hex` and `bin`.
 
-## scripts
+### scripts
 
 List of `pre` and `post` scripts, which are themselves lists of strings.  These commands will be executed verbatim before and/or after the build operation.  Defaults to `null`.
 
@@ -112,27 +114,27 @@ default:
       - /path/to/custom/script --script_param
 ```
 
-## toolchain_path
+### toolchain_path
 
 String.  Specifies the path to the directory containg the toolchain.  Defaults to `null`.
 
-## compiler
+### compiler
 
 String.  Defaults to `gcc`.
 
-## linker
+### linker
 
 String.  Defaults to `gcc`.
 
-## objcopy
+### objcopy
 
 String.  Defaults to `objcopy`.
 
-## size
+### size
 
 String.  Defaults to `size`.
 
-## flags
+### flags
 
 A list of strings, each containing flags that will be forwarded to, both, the `compiler` and the `linker`.
 
@@ -144,15 +146,15 @@ default:
     - -ffunction-sections
 ```
 
-## cflags
+### cflags
 
 A list of strings, each containing flags that will be forwarded to the compiler only.  Very similar to `flags` above.
 
-## lflags
+### lflags
 
 A list of strings, each containing flags that will be forwarded to the linker only.  Very similar to `flags` above.
 
-## sources
+### sources
 
 A list of strings, each of which is a source.  This is usually a list of your c files.
 
@@ -163,11 +165,22 @@ default:
     - src/included_source.c
 ```
 
-## includes
+### includes
 
 A list of strings, similar in format to `sources`, each element of which is an include file that will be passed to, both, the compiler and linker.
 
-## lscripts
+### lscripts
 
 A list of strings, similar in format to `sources`, each element of which will be passed as a linker script into the linker.
 
+## Special Strings
+
+Some special strings will be automatically replaced wherever encountered in the `maekfile`.
+
+`{{ BUILD_PATH }}` will be replaced by the configuration name.  This is useful in some places, particularly in pre and post-build scripts which apply to multiple configurations or for options that require a path (such as generating a map file below).
+
+```yml
+default:
+  lflags:
+    - -Xlinker -Map={{ BUILD_PATH }}/map
+```
