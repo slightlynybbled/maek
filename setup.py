@@ -2,7 +2,10 @@ from setuptools import setup
 import os
 
 requirements = [
-    'tqdm >= 4.2', 'click >= 6.7', 'pyyaml >= 4.1'
+    'click >= 6.7',
+    'coloredlogs >= 10.0',
+    'tqdm >= 4.2',
+    'pyyaml >= 3.1'
 ]
 
 # these are generally only used by devs

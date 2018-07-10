@@ -3,10 +3,10 @@ import yaml
 import click
 import os
 
+import coloredlogs
+
 from maek.maek import Builder
 from maek.util import dict_replace
-
-logging.basicConfig(format='%(asctime)s: %(message)s')
 
 
 @click.command()
@@ -21,6 +21,7 @@ def main(configuration, clean, file, verbose, quiet):
     logger = logging.getLogger()
     if verbose:
         logger.setLevel(logging.DEBUG)
+    coloredlogs.install(fmt='%(asctime)s: %(message)s')
 
     # if there is no extension, then append 'yml' to it
     if os.path.splitext(file)[1] == '':
