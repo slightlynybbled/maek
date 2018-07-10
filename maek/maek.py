@@ -105,7 +105,7 @@ class Builder:
 
         # copiers will operate exclusively within the build
         # directory, but only after a successful link operation
-        if compile or link and succeeded:
+        if (compile or link) and succeeded:
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
                 path=f'{path}/{name}',
@@ -362,7 +362,7 @@ class ExecScripts:
                                  stderr=subprocess.PIPE,
                                  stdout=subprocess.PIPE)
             processes.append(p)
-            self._logger.debug(f'creating process: {p}')
+            self._logger.debug(f'creating process PID {p.pid}')
             pbar.update(1)
 
             # initial count of the active processes
@@ -381,7 +381,7 @@ class ExecScripts:
                     if process.poll() is None:
                         active_processes += 1
 
-                self._logger.debug(f'waiting for active processes'
+                self._logger.debug(f'waiting for active processes '
                                    f'to go to below {max_processes}')
                 sleep(0.010)
 
