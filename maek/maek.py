@@ -52,7 +52,7 @@ class Builder:
         if compile or link:
             os.makedirs(f'{path}', exist_ok=True)
 
-        if scripts and not clean:
+        if scripts:
             pre_compile_scripts = scripts.get('pre')
             if pre_compile_scripts:
                 self._logger.info('executing pre-build scripts...')
@@ -126,7 +126,7 @@ class Builder:
             sizer.size()
             succeeded = False if sizer.succeeded is False else succeeded
 
-        if scripts and not clean and succeeded:
+        if scripts and succeeded:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
                 self._logger.info('executing post-build scripts...')
