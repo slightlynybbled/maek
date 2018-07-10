@@ -50,6 +50,7 @@ def main(configuration, clean, file, verbose, quiet):
 
     config_found = False
 
+    # look for the configuration that was specified on the command line
     for project_name in bd.keys():
         if project_name == configuration:
             config_found = True
@@ -81,6 +82,7 @@ def main(configuration, clean, file, verbose, quiet):
             loglevel = logging.WARNING if quiet else loglevel
 
             Builder(loglevel=loglevel, **new_project)
+            break  # the configuration was executed, now break out of the loop
 
     if not config_found:
         logger.error(f'configuration "{configuration}" '
