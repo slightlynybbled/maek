@@ -2,9 +2,9 @@
 
 To replace makefiles with something easier to use.  Opinionated and slanted towards C/C++ workflow.
 
-# Status: Experimental
+# Status: Increasingly Stable
 
-All of this is likely to change as I begin to use the tool.  Don't count on consistency.
+I am closing in on the stable version of the interface and will likely release a v0.1 soon to commemorate that milestone.
 
 # Usage
 
