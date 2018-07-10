@@ -199,9 +199,12 @@ class Compiler:
                 os.makedirs(d, exist_ok=True)
 
         # compile all of the .o files
-        es = ExecScripts(self._compile_scripts, loglevel=self._logger.getEffectiveLevel())
-        self.succeeded = es.succeeded
-        return es.succeeded
+        if len(self._compile_scripts) > 0:
+            es = ExecScripts(self._compile_scripts, loglevel=self._logger.getEffectiveLevel())
+            self.succeeded = es.succeeded
+            return es.succeeded
+
+        return True
 
 
 class Linker:
