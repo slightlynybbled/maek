@@ -17,6 +17,8 @@ default:
 
 # use the debug configuration to add the `-g` flag
 debug:
+
+  # when the 'add' is specified under flags, then it will append those flags to the default
   flags:
     add:
       - -g
@@ -24,6 +26,8 @@ debug:
 # the release configuration will automatically clean and build the entire project
 release:
   clean: true
+
+  # when a new list is included under the flags, it will overwrite the default
   flags:
     - -O1
 
