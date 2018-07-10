@@ -23,8 +23,9 @@ from maek.util import dict_replace
 def main(configuration, clean, file, verbose, quiet):
     logger = logging.getLogger()
     if verbose:
-        logger.setLevel(logging.DEBUG)
-    coloredlogs.install(fmt='%(asctime)s: %(message)s')
+        coloredlogs.install(level=logging.DEBUG, fmt='%(asctime)s: %(message)s')
+    else:
+        coloredlogs.install(level=logging.INFO, fmt='%(asctime)s: %(message)s')
 
     # if there is no extension, then append 'yml' to it
     if os.path.splitext(file)[1] == '':
