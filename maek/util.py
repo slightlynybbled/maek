@@ -1,10 +1,10 @@
 def dict_replace(data: dict, current_value: str, new_value: str):
     """
-    Replace {{ PROJECT_PATH }} with the path
-    :param data:
-    :param current_value:
-    :param new_value:
-    :return:
+    Replace instances of `current_value` with the `new_value`
+    :param data: a dictionary
+    :param current_value: the value to be replaced
+    :param new_value: that value used to replace
+    :return: the new dictionary
     """
     new_data = dict()
 
