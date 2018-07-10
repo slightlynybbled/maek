@@ -13,9 +13,12 @@ from maek.util import dict_replace
 @click.version_option()
 @click.argument('configuration', default='default')
 @click.option('--clean', '-c', is_flag=True, default=False)
-@click.option('--file', '-f', type=str, default='maekfile.yml', help='specifies the maekfile')
-@click.option('--verbose', '-v', is_flag=True, default=False, help='turn on verbose mode')
-@click.option('--quiet', '-q', is_flag=True, default=False, help='quiet output, only displays warnings and errors')
+@click.option('--file', '-f', type=str, default='maekfile.yml',
+              help='specifies the maekfile')
+@click.option('--verbose', '-v', is_flag=True, default=False,
+              help='turn on verbose mode')
+@click.option('--quiet', '-q', is_flag=True, default=False,
+              help='quiet output, only displays warnings and errors')
 @click.version_option()
 def main(configuration, clean, file, verbose, quiet):
     logger = logging.getLogger()
@@ -64,7 +67,9 @@ def main(configuration, clean, file, verbose, quiet):
                     new_project[k] = v
 
             # replace certain strings
-            new_project = dict_replace(new_project, '{{ BUILD_PATH }}', new_project['name'])
+            new_project = dict_replace(new_project,
+                                       '{{ BUILD_PATH }}',
+                                       new_project['name'])
 
             if clean:
                 new_project['clean'] = True
@@ -77,10 +82,9 @@ def main(configuration, clean, file, verbose, quiet):
             Builder(loglevel=loglevel, **new_project)
 
     if not config_found:
-        logger.error(f'configuration "{configuration}" not found within "{file}"')
+        logger.error(f'configuration "{configuration}" '
+                     f'not found within "{file}"')
 
 
 if __name__ == '__main__':
     main()
-
-

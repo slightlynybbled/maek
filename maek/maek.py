@@ -10,10 +10,12 @@ import logging
 
 class Builder:
     """
-    This is the core class which will compile, link, and execute all pre/post scripts.
+    This is the core class which will compile, link,
+    and execute all pre/post scripts.
     """
     def __init__(self, name, path=None,
-                 toolchain_path=None, compiler='gcc', linker='gcc', objcopy='objcopy', size='size',
+                 toolchain_path=None, compiler='gcc', linker='gcc',
+                 objcopy='objcopy', size='size',
                  flags: list=None, cflags: list=None, lflags: list=None,
                  sources: list=None, includes: list=None, lscripts: list=None,
                  out: str=None, exports: list=None, scripts: dict=None,
@@ -39,7 +41,8 @@ class Builder:
         else:
             os.chdir(f'{path}')
 
-        out = f'{path}/{name}/{name}.{out}' if out else f'{path}/{name}/{name}.out'
+        out = f'{path}/{name}/{name}.{out}' if out \
+            else f'{path}/{name}/{name}.out'
         self._logger.debug(f'out file path: {out}')
 
         exports = [f'{name}.{e}' for e in exports] if exports else []
@@ -53,7 +56,8 @@ class Builder:
             pre_compile_scripts = scripts.get('pre')
             if pre_compile_scripts:
                 self._logger.info('executing pre-build scripts...')
-                es = ExecScripts(pre_compile_scripts, max_processes=1, loglevel=loglevel+10)
+                es = ExecScripts(pre_compile_scripts,
+                                 max_processes=1, loglevel=loglevel+10)
                 succeeded = False if es.succeeded is False else succeeded
 
         if clean:
@@ -71,7 +75,8 @@ class Builder:
 
         compiler = Compiler(
             name,
-            compiler=f'{toolchain_path}/{compiler}' if toolchain_path else f'{compiler}',
+            compiler=f'{toolchain_path}/{compiler}'
+            if toolchain_path else f'{compiler}',
             sources=sources,
             includes=includes,
             flags=flags + cflags,
@@ -86,7 +91,8 @@ class Builder:
         linker = Linker(
             name,
             path=path,
-            linker=f'{toolchain_path}/{linker}' if toolchain_path else f'{linker}',
+            linker=f'{toolchain_path}/{linker}'
+            if toolchain_path else f'{linker}',
             sources=compiler.output_files,
             scripts=lscripts,
             flags=flags + lflags,
@@ -97,7 +103,8 @@ class Builder:
             linker.link()
             succeeded = False if linker.succeeded is False else succeeded
 
-        # copiers will operate exclusively within the build directory, but only after a successful link operation
+        # copiers will operate exclusively within the build
+        # directory, but only after a successful link operation
         if compile or link and succeeded:
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
@@ -123,13 +130,15 @@ class Builder:
             post_compile_scripts = scripts.get('post')
             if post_compile_scripts:
                 self._logger.info('executing post-build scripts...')
-                es = ExecScripts(post_compile_scripts, max_processes=1, loglevel=loglevel+10)
+                es = ExecScripts(post_compile_scripts,
+                                 max_processes=1, loglevel=loglevel+10)
                 succeeded = False if es.succeeded is False else succeeded
 
         if succeeded:
             self._logger.info('complete!')
         else:
-            self._logger.error('one or more processes failed, build process halted prematurely')
+            self._logger.error('one or more processes failed, '
+                               'build process halted prematurely')
 
         self._logger.info(f'time to completion: {clock() - start:.03}s')
 
@@ -175,7 +184,9 @@ class Compiler:
         flag_string = ' '.join(flags)
         include_string = ' '.join([f'-I"{i}"' for i in includes])
 
-        compile_scripts = [f'"{compiler}" -c {sf} -o {of} {flag_string} {include_string}' for sf, of in zip(source_files, to_compile)]
+        compile_scripts = [f'"{compiler}" -c {sf} -o {of} '
+                           f'{flag_string} {include_string}'
+                           for sf, of in zip(source_files, to_compile)]
 
         self.output_files = object_files
         self._compile_scripts = compile_scripts
@@ -186,8 +197,9 @@ class Compiler:
         :return: None
         """
         self._logger.info('compiling...')
-        # build the project directory as GCC will not create subdirectories for you
 
+        # build the project directory as GCC
+        # will not create subdirectories for you
         self._logger.debug('creating output directories...')
         for o in self.output_files:
             d = os.path.dirname(o)
@@ -200,7 +212,8 @@ class Compiler:
 
         # compile all of the .o files
         if len(self._compile_scripts) > 0:
-            es = ExecScripts(self._compile_scripts, loglevel=self._logger.getEffectiveLevel())
+            es = ExecScripts(self._compile_scripts,
+                             loglevel=self._logger.getEffectiveLevel())
             self.succeeded = es.succeeded
             return es.succeeded
 
@@ -229,13 +242,15 @@ class Linker:
         for s in scripts:
             _, extension = os.path.splitext(s)
             if extension != '.ld':
-                raise ValueError(f'linker script extension not valid: {extension}')
+                raise ValueError(f'linker script extension '
+                                 f'not valid: {extension}')
 
         flags_string = ' '.join(flags)
         linker_scripts_string = ' '.join([f'-T "{s}"' for s in scripts])
         sources_string = ' '.join([f'"{s}"' for s in sources])
 
-        self._link_script = f'"{linker}" -o {out} {flags_string} {linker_scripts_string} {sources_string}'
+        self._link_script = f'"{linker}" -o {out} {flags_string} ' \
+                            f'{linker_scripts_string} {sources_string}'
         self.out_file = out
 
     def link(self):
@@ -244,16 +259,19 @@ class Linker:
         :return: None
         """
         self._logger.info('linking...')
-        es = ExecScripts([self._link_script], loglevel=self._logger.getEffectiveLevel())
+        es = ExecScripts([self._link_script],
+                         loglevel=self._logger.getEffectiveLevel())
         self.succeeded = es.succeeded
         return es.succeeded
 
 
 class Copier:
     """
-    Copies the files into different formats using gcc-based syntax (see gcc `objcopy`).
+    Copies the files into different formats
+    using gcc-based syntax (see gcc `objcopy`).
     """
-    def __init__(self, in_file, path, out_files: list, objcopy='objcopy', loglevel=logging.INFO):
+    def __init__(self, in_file, path, out_files: list, objcopy='objcopy',
+                 loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
@@ -288,7 +306,8 @@ class Sizer:
     """
     Shows the size using gcc-based syntax (see gcc `size`).
     """
-    def __init__(self, in_file, path, format='dec', size='size', loglevel=logging.INFO):
+    def __init__(self, in_file, path, format='dec', size='size',
+                 loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
@@ -305,7 +324,8 @@ class Sizer:
     def size(self):
         if self._script:
             self._logger.info('sizing...')
-            es = ExecScripts([self._script], loglevel=self._logger.getEffectiveLevel())
+            es = ExecScripts([self._script],
+                             loglevel=self._logger.getEffectiveLevel())
             self.succeeded = es.succeeded
             return es.succeeded
 
@@ -314,14 +334,18 @@ class Sizer:
 
 class ExecScripts:
     """
-    Executes a list of scripts while printing any output and status to the console.
+    Executes a list of scripts while printing
+    any output and status to the console.
     """
 
-    def __init__(self, scripts: list, working_directory=None, max_processes: int=None, loglevel=logging.INFO):
+    def __init__(self, scripts: list,
+                 working_directory=None, max_processes: int=None,
+                 loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
-        self.succeeded = True  # indicates that all scripts executed successfully
+        # indicates that all scripts executed successfully
+        self.succeeded = True
 
         if working_directory:
             os.chdir(working_directory)
@@ -333,7 +357,10 @@ class ExecScripts:
         for script in scripts:
             self._logger.debug(f'{script}')
 
-            p = subprocess.Popen(script, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            p = subprocess.Popen(script,
+                                 shell=True,
+                                 stderr=subprocess.PIPE,
+                                 stdout=subprocess.PIPE)
             processes.append(p)
             self._logger.debug(f'creating process: {p}')
             pbar.update(1)
@@ -350,7 +377,8 @@ class ExecScripts:
                     if process.poll() is None:
                         active_processes += 1
 
-                self._logger.debug(f'waiting for active processes to go to below {max_processes}')
+                self._logger.debug(f'waiting for active processes'
+                                   f'to go to below {max_processes}')
                 sleep(0.010)
 
             # todo: if any processes have errored out, then stop all processes
