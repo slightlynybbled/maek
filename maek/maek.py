@@ -2,6 +2,7 @@ import os
 from shutil import rmtree
 import subprocess
 from time import clock, sleep
+from multiprocessing import cpu_count
 
 from tqdm import tqdm
 import logging
@@ -61,7 +62,6 @@ class Builder:
                 rmtree(f'{name}')
             except FileNotFoundError:
                 self._logger.error('directory not found')
-                succeeded = False
 
         if compile or link:
             try:
@@ -317,7 +317,7 @@ class ExecScripts:
     Executes a list of scripts while printing any output and status to the console.
     """
 
-    def __init__(self, scripts: list, working_directory=None, max_processes=8, loglevel=logging.INFO):
+    def __init__(self, scripts: list, working_directory=None, max_processes: int=None, loglevel=logging.INFO):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._logger.setLevel(loglevel)
 
@@ -327,6 +327,7 @@ class ExecScripts:
             os.chdir(working_directory)
 
         # collect and start all processes at one time to enable parallel builds
+        max_processes = cpu_count() if max_processes is None else max_processes
         pbar = tqdm(total=len(scripts))
         processes = []
         for script in scripts:
