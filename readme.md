@@ -51,15 +51,15 @@ The `maek` command generally expects to find a `maekfile` in the current directo
     Usage: maek [OPTIONS] CONFIGURATION
     
     Options:
-      --version        Show the version and exit.
+      --version            Show the version and exit.
       -c, --clean
-      -f, --file TEXT  specifies the maekfile
-      -v, --verbose    turn on verbose mode
-      -q, --quiet      quiet output, only displays warnings and errors
-      --version        Show the version and exit.
-      --help           Show this message and exit.
+      -f, --file TEXT      specifies the maekfile
+      -v, --verbose        turn on verbose mode
+      -q, --quiet          quiet output, only displays warnings and errors
+      -l, --list_configs   shows the available configurations
+      --version            Show the version and exit.
+      --help               Show this message and exit.
 
-      
 ## Building a Project
 
 Assuming that a configuration called `release` is available within the yml file, a suitable build command would be
