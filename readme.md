@@ -62,11 +62,17 @@ The `maek` command generally expects to find a `maekfile` in the current directo
       
 ## Building a Project
 
+Assuming that a configuration called `release` is available within the yml file, a suitable build command would be
+
     $> maek release
     
 ## Cleaning a Project
 
+Need to clean up a project directory in order to do a re-build?  Simply call up the configuration name with the `--clean` parameter.
+
     $> maek release --clean
+
+It is also possible to use the `clean` option shown in `configuration options` in order to execute a clean on every build.
     
 # Configuration Options
 
