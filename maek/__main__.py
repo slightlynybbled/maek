@@ -39,18 +39,18 @@ def main(configuration, clean, file, verbose, quiet, list_configs):
             string = f.read()
             bd = yaml.load(string)
     except FileNotFoundError:
-        logger.error(f'cannot find configuration file {file}')
+        logger.error('cannot find configuration file {}'.format(file))
         return
     except PermissionError:
-        logger.error(f'user does not have permission to access {file}')
+        logger.error('user does not have permission to access {}'.format(file))
         return
 
     # if the '--list' option is specified, then
     # list the available configurations
     if list_configs:
-        print(f'maek v{__version__} available configurations:')
+        print('maek v{} available configurations:'.format(__version__))
         for config, _ in bd.items():
-            print(f' - {config}')
+            print(' - {}'.format(config))
         return
 
     # first, load the 'default' configuration
@@ -96,8 +96,8 @@ def main(configuration, clean, file, verbose, quiet, list_configs):
             break  # the configuration was executed, now break out of the loop
 
     if not config_found:
-        logger.error(f'configuration "{configuration}" '
-                     f'not found within "{file}"')
+        logger.error('configuration "{}" '.format(configuration) +
+                     'not found within "{}"'.format(file))
 
 
 if __name__ == '__main__':

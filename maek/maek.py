@@ -39,18 +39,18 @@ class Builder:
         if not path:
             path = os.getcwd()
         else:
-            os.chdir(f'{path}')
+            os.chdir(path)
 
-        out = f'{path}/{name}/{name}.{out}' if out \
-            else f'{path}/{name}/{name}.out'
-        self._logger.debug(f'out file path: {out}')
+        out = '{}/{}/{}.{}'.format(path, name, name, out) if out \
+            else '{}/{}/{}.out'.format(path, name, name)
+        self._logger.debug('out file path: {}'.format(path))
 
-        exports = [f'{name}.{e}' for e in exports] if exports else []
+        exports = ['{}.{}'.format(name, e) for e in exports] if exports else []
         if exports:
-            self._logger.debug(f'exports: {exports}')
+            self._logger.debug('exports: {}'.format(exports))
 
         if compile or link:
-            os.makedirs(f'{path}', exist_ok=True)
+            os.makedirs('{}'.format(path), exist_ok=True)
 
         if scripts:
             pre_compile_scripts = scripts.get('pre')
@@ -63,20 +63,20 @@ class Builder:
         if clean:
             self._logger.info('cleaning...')
             try:
-                rmtree(f'{name}')
+                rmtree('{}'.format(name))
             except FileNotFoundError:
                 self._logger.error('directory not found')
 
         if compile or link:
             try:
-                os.makedirs(f'{path}/{name}', exist_ok=True)
+                os.makedirs('{}/{}'.format(path, name), exist_ok=True)
             except PermissionError:
                 succeeded = False
 
         compiler = Compiler(
             name,
-            compiler=f'{toolchain_path}/{compiler}'
-            if toolchain_path else f'{compiler}',
+            compiler='{}/{}'.format(toolchain_path, compiler)
+            if toolchain_path else '{}'.format(compiler),
             sources=sources,
             includes=includes,
             flags=flags + cflags,
@@ -91,12 +91,12 @@ class Builder:
         linker = Linker(
             name,
             path=path,
-            linker=f'{toolchain_path}/{linker}'
-            if toolchain_path else f'{linker}',
+            linker='{}/{}'.format(toolchain_path, linker)
+            if toolchain_path else '{}'.format(linker),
             sources=compiler.output_files,
             scripts=lscripts,
             flags=flags + lflags,
-            out=f'{out}',
+            out='{}'.format(out),
             loglevel=loglevel
         )
         if link and succeeded:
@@ -108,7 +108,7 @@ class Builder:
         if (compile or link) and succeeded:
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
-                path=f'{path}/{name}',
+                path='{}/{}'.format(path, name),
                 out_files=exports,
                 objcopy=objcopy,
                 loglevel=loglevel
@@ -119,7 +119,7 @@ class Builder:
         if (compile or link) and succeeded:
             sizer = Sizer(
                 in_file=os.path.basename(linker.out_file),
-                path=f'{path}/{name}',
+                path='{}/{}'.format(path, name),
                 size=size,
                 loglevel=loglevel
             )
@@ -140,7 +140,7 @@ class Builder:
             self._logger.error('one or more processes failed, '
                                'build process halted prematurely')
 
-        self._logger.info(f'time to completion: {clock() - start:.03}s')
+        self._logger.info('time to completion: {:.03}s'.format(clock() - start))
 
 
 class Compiler:
@@ -155,10 +155,10 @@ class Compiler:
 
         self.succeeded = None
 
-        build_path = f'{name}'
+        build_path = '{}'.format(name)
 
-        base_names = [f'{os.path.splitext(s)[0]}' for s in sources]
-        extensions = [f'{os.path.splitext(s)[1]}' for s in sources]
+        base_names = [os.path.splitext(s)[0] for s in sources]
+        extensions = [os.path.splitext(s)[1] for s in sources]
 
         source_files = []
         object_files = []
@@ -166,8 +166,8 @@ class Compiler:
 
         # if the object file is older than the source, then re-compile
         for fname, extension in zip(base_names, extensions):
-            s = f'{fname}{extension}'
-            o = f'{build_path}/{fname}.o'
+            s = '{}{}'.format(fname, extension)
+            o = '{}/{}.o'.format(build_path, fname)
 
             s_mtime = os.stat(s).st_mtime
 
@@ -182,10 +182,10 @@ class Compiler:
             object_files.append(o)
 
         flag_string = ' '.join(flags)
-        include_string = ' '.join([f'-I"{i}"' for i in includes])
+        include_string = ' '.join(['-I"{}"'.format(i) for i in includes])
 
-        compile_scripts = [f'"{compiler}" -c {sf} -o {of} '
-                           f'{flag_string} {include_string}'
+        compile_scripts = ['"{}" -c {} -o {} '.format(compiler, sf, of) +
+                           '{} {}'.format(flag_string, include_string)
                            for sf, of in zip(source_files, to_compile)]
 
         self.output_files = object_files
@@ -206,7 +206,7 @@ class Compiler:
 
             try:
                 os.makedirs(d)
-                self._logger.debug(f'creating {d}')
+                self._logger.debug('creating {}'.format(d))
             except FileExistsError:
                 os.makedirs(d, exist_ok=True)
 
@@ -237,20 +237,22 @@ class Linker:
         sources = sources if sources else []
         scripts = scripts if scripts else []
         flags = flags if flags else []
-        out = out if out else f'{path}/{name}.out'
+        out = out if out else '{}/{}.out'.format(path, name)
 
         for s in scripts:
             _, extension = os.path.splitext(s)
             if extension != '.ld':
-                raise ValueError(f'linker script extension '
-                                 f'not valid: {extension}')
+                raise ValueError('linker script extension '
+                                 'not valid: {}'.format(extension))
 
         flags_string = ' '.join(flags)
-        linker_scripts_string = ' '.join([f'-T "{s}"' for s in scripts])
-        sources_string = ' '.join([f'"{s}"' for s in sources])
+        linker_scripts_string = ' '.join(['-T "{}"'.format(s) for s in scripts])
+        sources_string = ' '.join(['"{}"'.format(s) for s in sources])
 
-        self._link_script = f'"{linker}" -o {out} {flags_string} ' \
-                            f'{linker_scripts_string} {sources_string}'
+        self._link_script = \
+            '"{}" -o {} {} '.format(linker, out, flags_string) + \
+            '{} {}'.format(linker_scripts_string, sources_string)
+
         self.out_file = out
 
     def link(self):
@@ -281,11 +283,13 @@ class Copier:
         for out_file in out_files:
             if 'hex' in out_file.lower():
                 self._scripts.append(
-                    f'{objcopy} -O ihex {path}/{in_file} {path}/{out_file}'
+                    '{} -O ihex {}/{} {}/{}'
+                    .format(objcopy, path, in_file, path, out_file)
                 )
             elif 'bin' in out_file.lower():
                 self._scripts.append(
-                    f'{objcopy} -O binary {path}/{in_file} {path}/{out_file}'
+                    '{} -O binary {}/{} {}/{}'
+                    .format(objcopy, path, in_file, path, out_file)
                 )
 
     def copy(self):
@@ -315,9 +319,9 @@ class Sizer:
         self.succeeded = None
 
         if 'dec' in format.lower():
-            self._script = f'{size} {path}/{in_file}'
+            self._script = '{} {}/{}'.format(size, path, in_file)
         elif 'hex' in format.lower():
-            self._script = f'{size} -x {path}/{in_file}'
+            self._script = '{} -x {}/{}'.format(size, path, in_file)
         else:
             self._script = None
 
@@ -355,14 +359,14 @@ class ExecScripts:
         pbar = tqdm(total=len(scripts))
         processes = []
         for script in scripts:
-            self._logger.debug(f'{script}')
+            self._logger.debug('{}'.format(script))
 
             p = subprocess.Popen(script,
                                  shell=True,
                                  stderr=subprocess.PIPE,
                                  stdout=subprocess.PIPE)
             processes.append(p)
-            self._logger.debug(f'creating process PID {p.pid}')
+            self._logger.debug('creating process PID {}'.format(p.pid))
             pbar.update(1)
 
             # initial count of the active processes
@@ -381,8 +385,8 @@ class ExecScripts:
                     if process.poll() is None:
                         active_processes += 1
 
-                self._logger.debug(f'waiting for active processes '
-                                   f'to go to below {max_processes}')
+                self._logger.debug('waiting for active processes '
+                                   'to go to below {}'.format(max_processes))
                 sleep(0.010)
 
         # wait for each process and appropriately show its output
@@ -391,14 +395,14 @@ class ExecScripts:
             status = p.wait()
 
             if output:
-                self._logger.info(f"{output.decode('utf-8')}")
+                self._logger.info("\n{}".format(output.decode('utf-8')))
 
             if error:
-                self._logger.warning(f"\n{error.decode('utf-8')}")
+                self._logger.warning("\n{}".format(error.decode('utf-8')))
 
             if status != 0:
                 self._logger.error('failed')
                 self.succeeded = False
                 break
             else:
-                self._logger.debug(f'success: {p.args}')
+                self._logger.debug('success: {}'.format(p.args))
