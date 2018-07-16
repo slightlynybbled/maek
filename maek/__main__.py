@@ -7,6 +7,7 @@ import coloredlogs
 
 from maek.maek import Builder
 from maek.util import dict_replace
+from maek.version import __version__
 
 
 @click.command()
@@ -19,8 +20,10 @@ from maek.util import dict_replace
               help='turn on verbose mode')
 @click.option('--quiet', '-q', is_flag=True, default=False,
               help='quiet output, only displays warnings and errors')
+@click.option('--list_configs', '-l', is_flag=True, default=False,
+              help='shows the available configurations')
 @click.version_option()
-def main(configuration, clean, file, verbose, quiet):
+def main(configuration, clean, file, verbose, quiet, list_configs):
     logger = logging.getLogger()
     if verbose:
         coloredlogs.install(level=logging.DEBUG, fmt='%(asctime)s: %(message)s')
@@ -40,6 +43,14 @@ def main(configuration, clean, file, verbose, quiet):
         return
     except PermissionError:
         logger.error(f'user does not have permission to access {file}')
+        return
+
+    # if the '--list' option is specified, then
+    # list the available configurations
+    if list_configs:
+        print(f'maek v{__version__} available configurations:')
+        for config, _ in bd.items():
+            print(f' - {config}')
         return
 
     # first, load the 'default' configuration
