@@ -12,7 +12,7 @@ All uses will assume that there is a file called `maekfile` within the directory
 
 ## YML files
 
-The YML file is best presented as an example.  Below is an example that will compile an arm-based processor.
+The YML file is best presented as an example.  Below is an example that will compile an generic 'hello-world' type of application that may be found in the `examples` directory.
 
 Each file must contain a `default` configuration.  All other configurations will inherit from the default configuration.
 
