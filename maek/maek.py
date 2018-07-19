@@ -375,15 +375,18 @@ class ExecScripts:
                     self.succeeded = False
                     break
 
+            logged = False
             while active_processes >= max_processes and self.succeeded:
                 active_processes = 0
                 for process in processes:
                     if process.poll() is None:
                         active_processes += 1
 
-                self._logger.debug(f'waiting for active processes '
-                                   f'to go to below {max_processes}')
-                sleep(0.010)
+                if not logged:
+                    self._logger.debug(f'waiting for active processes '
+                                       f'to go to below {max_processes}')
+                    logged = True
+                sleep(0.01)
 
         # wait for each process and appropriately show its output
         for p in processes:
