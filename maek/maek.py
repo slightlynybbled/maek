@@ -110,7 +110,7 @@ class Builder:
                 in_file=os.path.basename(linker.out_file),
                 path=f'{path}/{name}',
                 out_files=exports,
-                objcopy=objcopy,
+                objcopy=f'{toolchain_path}/{objcopy}',
                 loglevel=loglevel
             )
             copier.copy()
@@ -120,7 +120,7 @@ class Builder:
             sizer = Sizer(
                 in_file=os.path.basename(linker.out_file),
                 path=f'{path}/{name}',
-                size=size,
+                size=f'{toolchain_path}/{size}',
                 loglevel=loglevel
             )
             sizer.size()
