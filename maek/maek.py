@@ -110,7 +110,7 @@ class Builder:
                 in_file=os.path.basename(linker.out_file),
                 path='{}/{}'.format(path, name),
                 out_files=exports,
-                objcopy=objcopy,
+                objcopy=f'{toolchain_path}/{objcopy}',
                 loglevel=loglevel
             )
             copier.copy()
@@ -119,7 +119,7 @@ class Builder:
         if (compile or link) and succeeded:
             sizer = Sizer(
                 in_file=os.path.basename(linker.out_file),
-                path='{}/{}'.format(path, name),
+                path='{}/{}'.format(path, name) if path else name,
                 size=size,
                 loglevel=loglevel
             )
@@ -379,15 +379,18 @@ class ExecScripts:
                     self.succeeded = False
                     break
 
+            logged = False
             while active_processes >= max_processes and self.succeeded:
                 active_processes = 0
                 for process in processes:
                     if process.poll() is None:
                         active_processes += 1
 
-                self._logger.debug('waiting for active processes '
-                                   'to go to below {}'.format(max_processes))
-                sleep(0.010)
+                if not logged:
+                    self._logger.debug(f'waiting for active processes '
+                                       f'to go to below {max_processes}')
+                    logged = True
+                sleep(0.01)
 
         # wait for each process and appropriately show its output
         for p in processes:
