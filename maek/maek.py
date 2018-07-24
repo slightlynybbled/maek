@@ -76,7 +76,7 @@ class Builder:
         compiler = Compiler(
             name,
             compiler='{}/{}'.format(toolchain_path, compiler)
-            if toolchain_path else '{}'.format(compiler),
+            if toolchain_path else compiler,
             sources=sources,
             includes=includes,
             flags=flags + cflags,
@@ -108,9 +108,10 @@ class Builder:
         if (compile or link) and succeeded:
             copier = Copier(
                 in_file=os.path.basename(linker.out_file),
-                path='{}/{}'.format(path, name),
+                path='{}/{}'.format(path, name) if path else name,
                 out_files=exports,
-                objcopy=f'{toolchain_path}/{objcopy}',
+                objcopy='{}/{}'.format(toolchain_path, objcopy)
+                if toolchain_path else objcopy,
                 loglevel=loglevel
             )
             copier.copy()
@@ -387,8 +388,8 @@ class ExecScripts:
                         active_processes += 1
 
                 if not logged:
-                    self._logger.debug(f'waiting for active processes '
-                                       f'to go to below {max_processes}')
+                    self._logger.debug('waiting for active processes '
+                                       'to go to below {}'.format(max_processes))
                     logged = True
                 sleep(0.01)
 
