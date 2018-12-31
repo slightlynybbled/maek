@@ -1,10 +1,20 @@
 # Purpose
 
-To replace makefiles with something easier to use.  Opinionated and slanted towards C/C++ workflow.
+To replace makefiles with something easier to use and with faster compile times.  In today's PC market, we have routine access to machines with multiple threads.  This package will check the number of threads that your machine will support and will create that many threads for the compile stage.   
+
+This package is opinionated and slanted towards C/C++ workflow using gcc-like commands.
+
+# Installation
+
+If you are already using python and are familiar with a python workflow, then you can simply `pip install meak` and maek will be added to your python installation.
+
+If you would rather just try it out, then you can download a windows binary from the releases directory and execute it directly.  The package is portable and may be executed on the command line.  Should work as well as the python package!
 
 # Usage
 
 All uses will assume that there is a file called `maekfile` within the directory being executed.  This file consists of a YML dictionary containing a default configuration along with other potential configurations which are variantes on the default.  You may specify a different `maekfile` on the command line using the `--file` or `-f` options.
+
+The `/example` directory contains a gcc-oriented example, but I have been successfully using this package to cross-compile an ARM Cortex-M3 package for months.
 
 ## YML files
 
@@ -44,16 +54,16 @@ The `maek` command generally expects to find a `maekfile` in the current directo
     $> maek --version
     maek, version 0.1.2
     $> maek --help
-    Usage: maek [OPTIONS] CONFIGURATION
+    Usage: maek.exe [OPTIONS] [CONFIGURATION]
     
     Options:
-      --version            Show the version and exit.
+      --version           Show the version and exit.
       -c, --clean
-      -f, --file TEXT      specifies the maekfile
-      -v, --verbose        turn on verbose mode
-      -q, --quiet          quiet output, only displays warnings and errors
-      -l, --list_configs   shows the available configurations
-      --help               Show this message and exit.
+      -f, --file TEXT     specifies the maekfile
+      -v, --verbose       turn on verbose mode
+      -q, --quiet         quiet output, only displays warnings and errors
+      -l, --list_configs  shows the available configurations
+      --help              Show this message and exit.
 
 ## Building a Project
 
