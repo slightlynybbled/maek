@@ -2,16 +2,17 @@ import logging
 import yaml
 import click
 import os
+from sys import exit
 
 import coloredlogs
 
 from maek.maek import Builder
 from maek.util import dict_replace
-from maek.version import __version__
+from maek import __version__
 
 
 @click.command()
-@click.version_option()
+@click.version_option(version=__version__)
 @click.argument('configuration', default='default')
 @click.option('--clean', '-c', is_flag=True, default=False)
 @click.option('--file', '-f', type=str, default='maekfile.yml',
@@ -22,7 +23,6 @@ from maek.version import __version__
               help='quiet output, only displays warnings and errors')
 @click.option('--list_configs', '-l', is_flag=True, default=False,
               help='shows the available configurations')
-@click.version_option()
 def main(configuration, clean, file, verbose, quiet, list_configs):
     logger = logging.getLogger()
     if verbose:
