@@ -1,12 +1,8 @@
 from setuptools import setup
 import os
 
-requirements = [
-    'click >= 6.7',
-    'coloredlogs >= 10.0',
-    'tqdm >= 4.2',
-    'pyyaml >= 3.1'
-]
+with open('requirements.txt', 'r') as f:
+    requirements = [line.strip() for line in f.readlines()]
 
 # these are generally only used by devs
 setup_requirements = [
