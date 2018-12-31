@@ -2,10 +2,6 @@
 
 To replace makefiles with something easier to use.  Opinionated and slanted towards C/C++ workflow.
 
-# Status: Increasingly Stable
-
-I am closing in on the stable version of the interface and will likely release a v0.1 soon to commemorate that milestone.
-
 # Usage
 
 All uses will assume that there is a file called `maekfile` within the directory being executed.  This file consists of a YML dictionary containing a default configuration along with other potential configurations which are variantes on the default.  You may specify a different `maekfile` on the command line using the `--file` or `-f` options.
@@ -46,7 +42,7 @@ release:
 The `maek` command generally expects to find a `maekfile` in the current directory.  If not found, then the file may be specified using the `-f` or `--file` options on the command line.
 
     $> maek --version
-    maek, version 0.0.3
+    maek, version 0.1.2
     $> maek --help
     Usage: maek [OPTIONS] CONFIGURATION
     
@@ -57,7 +53,6 @@ The `maek` command generally expects to find a `maekfile` in the current directo
       -v, --verbose        turn on verbose mode
       -q, --quiet          quiet output, only displays warnings and errors
       -l, --list_configs   shows the available configurations
-      --version            Show the version and exit.
       --help               Show this message and exit.
 
 ## Building a Project
