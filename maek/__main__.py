@@ -37,7 +37,7 @@ def main(configuration, clean, file, verbose, quiet, list_configs):
     try:
         with open(file, 'r') as f:
             string = f.read()
-            bd = yaml.load(string)
+            bd = yaml.load(string, Loader=yaml.FullLoader)
     except FileNotFoundError:
         logger.error('cannot find configuration file {}'.format(file))
         return
